@@ -1,6 +1,6 @@
 {
-  "name": "jackabox/nova-duplicate-field",
-  "description": "A Laravel Nova field to duplicate records.",
+  "name": "stdioh/nova-duplicate-field",
+  "description": "A Laravel Nova field to duplicate records. This package is a fork from jackabox/nova-duplicate-field",
   "version": "0.3.0",
   "keywords": [
     "laravel",

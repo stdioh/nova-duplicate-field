@@ -13,7 +13,7 @@ class DuplicateController extends Controller
     public function duplicate(Request $request)
     {
         // Replicate the model
-        $model = $request->model::where('id', $request->id)->first();
+        $model = $request->model::find($request->id);
 
         if (!$model) {
             return [
@@ -23,38 +23,35 @@ class DuplicateController extends Controller
             ];
         }
 
-        $newModel = $model->replicate($request->except);
-
-        if (is_array($request->override)) {
-            foreach ($request->override as $field => $value) {
-                $newModel->{$field} = $value;
-            }
-        }
-
+        $newModel = $model->replicate();
         $newModel->push();
-
         if (isset($request->relations) && !empty($request->relations)) {
             // load the relations
             $model->load($request->relations);
 
             foreach ($model->getRelations() as $relation => $items) {
+
                 // works for hasMany
                 foreach ($items as $item) {
-                    // clean up our models, remove the id and remove the appends
-                    unset($item->id);
-                    $item->setAppends([]);
+                    if (!is_bool($item)) {
+                        if (method_exists($item, 'setAppends')) {
+                            // clean up our models, remove the id and remove the appends
+                            unset($item->id);
+                            
+                            $item->setAppends([]);
 
-                    // create a relation on the new model with the data.
-                    $newModel->{$relation}()->create($item->toArray());
+                            // create a relation on the new model with the data.
+                            $newModel->{$relation}()->create($item->toArray());
+                        }
+                    }
                 }
             }
-        }
-
+        }        
         // return response and redirect.
         return [
             'status' => 200,
             'message' => 'Done',
-            'destination' => url(config('nova.path') . '/resources/' . $request->resource . '/' . $newModel->id)
+            'destination' => url(config('nova.path') . '/resources/' . $request->resource . '/' . $newModel->getKey())
         ];
     }
 }
